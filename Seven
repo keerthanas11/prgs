@@ -1,0 +1,29 @@
+1. Create Two Sample Files
+nano file1.txt
+(Add some text → save with CTRL+O, exit with CTRL+X)
+nano file2.txt
+(Add slightly different text → save and exit)
+
+2. Compare Files Using diff
+diff file1.txt file2.txt
+
+3. Use cmp for Byte-Level Comparison
+cmp -l file1.txt file2.txt
+
+4. Use vimdiff for Side-by-Side Colored View
+vimdiff file1.txt file2.txt
+
+Navigation:
+]c → Jump to next change
+[c → Jump to previous change
+:qa! → Quit both files
+
+5. Use meld (GUI Tool – Similar to Compare It)
+If you want a GUI comparison like Compare It:
+sudo apt update
+sudo apt install meld -y
+Then run:
+meld file1.txt file2.txt
+
+6. Generate a Forensic Report
+diff -u file1.txt file2.txt > diff_report.txt

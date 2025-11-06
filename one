@@ -1,0 +1,72 @@
+1.	Configure VirtualBox Network for Packet Capture
+o	Open VirtualBox → Kali VM → Settings → Network.
+o	Set Adapter 1:
+	Attached to: Bridged Adapter
+	Promiscuous Mode: Allow All
+	Cable Connected: ✔️
+o	Save settings.
+
+Step 1 – Setup Apache Web Server
+sudo service apache2 start
+sudo mkdir -p /var/www/html/testlogin
+cd /var/www/html/testlogin
+
+Step 2 – Create Login HTML Page
+sudo nano login.html
+
+html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Login Page</title>
+</head>
+<body>
+    <h2>Login Form</h2>
+    <form action="login.php" method="post">
+        Username: <input type="text" name="username"><br><br>
+        Password: <input type="password" name="password"><br><br>
+        <input type="submit" value="Login">
+    </form>
+</body>
+</html>
+Save (Ctrl + O → Enter → Ctrl + X).
+
+Step 3 – Create PHP Script
+sudo nano login.php
+
+php
+<?php
+$username = $_POST['username'];
+$password = $_POST['password'];
+
+echo "<h2>Login Attempt</h2>";
+echo "Username: " . $username . "<br>";
+echo "Password: " . $password . "<br>";
+?>
+
+Step 4 – Start/Enable Apache
+sudo service apache2 status
+sudo service apache2 start
+
+Step 5 – Test Page
+Browser:
+http://127.0.0.1/testlogin/login.html
+Or: Type in bash
+curl http://127.0.0.1/testlogin/login.html
+
+Step 6 – Capture with Wireshark
+•	Open Wireshark → select lo (loopback) interface.
+
+•	Apply filter:
+http.request.method == "POST"
+
+Step 7 – Perform Login Attempt
+•	Username: admin
+•	Password: test123
+•	Submit form.
+
+Step 8 – Analyze Packets
+•	Locate POST packet.
+•	Right-click → Follow → TCP Stream.
+•	Credentials will be visible in plain text.
+

@@ -34,3 +34,50 @@ int main(void)
 gcc -g -O0 -fno-stack-protector –no-pie overflow.c –o overflow
 
 ./overflow
+
+CHATGPT CODE:
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
+int main(void)
+{
+    char buff[16];           /* small buffer on stack */
+    int flag = 0;           /* adjacent stack variable we will observe */
+    char input[512];        /* safe place to read full user input */
+
+    /* Print addresses so students can see stack layout */
+    printf("Address of buff : %p\n", (void*)buff);
+    printf("Address of flag : %p\n", (void*)&flag);
+    printf("Sizeof(buff) = %zu, sizeof(flag) = %zu\n\n", sizeof(buff), sizeof(flag));
+
+    printf("Enter some text (up to ~500 chars). We'll copy it into a small buffer to illustrate overflow.\n");
+    if (!fgets(input, sizeof(input), stdin)) {
+        perror("fgets");
+        return 1;
+    }
+
+    /* Strip newline from fgets if present */
+    input[strcspn(input, "\n")] = '\0';
+
+    printf("\nBefore unsafe copy:\n");
+    printf("  buff (as string): '%s'\n", buff);
+    printf("  flag = %d\n\n", flag);
+
+    /* UNSAFE copy: this will overflow buff if input length >= 16 */
+    /* This simulates old unsafe functions like gets()/strcpy used on unchecked input */
+    strcpy(buff, input);   /* purposefully unsafe for demonstration only */
+
+    printf("After unsafe copy:\n");
+    printf("  buff (as string): '%.40s' (truncated in print)\n", buff); /* avoid huge prints */
+    printf("  flag = %d\n\n", flag);
+
+    if (flag) {
+        printf("Notice: flag != 0 — adjacent memory was overwritten by the long input.\n");
+    } else {
+        printf("Notice: flag == 0 — no overwrite observed for this input length.\n");
+    }
+
+    return 0;
+}
+

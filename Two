@@ -1,0 +1,84 @@
+1) Prepare Workspace & Install Tools
+mkdir -p ~/acq_demo && cd ~/acq_demo
+sudo apt update
+sudo apt install -y steghide zip clamav
+
+2) Create Benign Victim Files & Verify Workspace
+mkdir -p ~/acq_demo/victim_docs
+echo "this is a test secret." > ~/acq_demo/victim_docs/secret.txt
+echo 'X5O!P%@AP[4\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*' > ~/acq_demo/eicar.com.txt
+ls -l ~/acq_demo
+cat ~/acq_demo/victim_docs/secret.txt
+
+3) Save Malware Simulation Script & Run It
+Create the script file and paste the provided script content (not repeated here).
+nano ~/acq_demo/simulate_malware.sh    # paste script content and save
+chmod +x ~/acq_demo/simulate_malware.sh
+bash -x ~/acq_demo/simulate_malware.sh  # debug run (traces each executed line)
+
+4) Hide the Encrypted Payload in an Image (Steganography)
+Before running these, ensure you have a JPEG at ~/acq_demo/cover1.jpg. If not, see the 'Add/Generate cover1.jpg' section below.
+ls -l /tmp/exfil/payload.zip
+ls -l ~/acq_demo/cover1.jpg
+steghide embed -cf ~/acq_demo/cover1.jpg -ef /tmp/exfil/payload.zip -p demo-pass
+steghide info ~/acq_demo/cover1.jpg   # type 'y' and enter pass phrase 'demo-pass' when prompted
+
+5) Conceal Stego-Image & Extract Data
+mkdir -p ~/.hidden_store
+mv ~/acq_demo/cover1.jpg ~/.hidden_store/.cover1.jpg
+ls -la ~/.hidden_store
+steghide extract -sf ~/.hidden_store/.cover1.jpg -p demo-pass -xf /tmp/recovered_payload.zip
+unzip -P pass123 /tmp/recovered_payload.zip -d /tmp/recovered_payload
+cat /tmp/recovered_payload/secret.txt
+
+
+
+
+malware file content
+#!/bin/bash
+
+# simulate_malware (robust, debug-friendly) — local-only demo
+
+set -euo pipefail
+
+echo "[*] script start: $(date)"
+
+TMPDIR="$(mktemp -d /tmp/exfil.XXXXXX)" || { echo "[!] mktemp failed" >&2; exit 1; }
+
+echo "[*] TMPDIR=${TMPDIR}"
+
+if [ -z "${TMPDIR}" ] || [ ! -d "${TMPDIR}" ]; then
+  echo "[!] Failed to create temp dir. TMPDIR='${TMPDIR}'" >&2
+  exit 1
+fi
+
+trap 'echo "[*] cleaning ${TMPDIR}"; rm -rf "${TMPDIR}"' EXIT
+
+SRC="${HOME}/acq_demo/victim_docs/secret.txt"
+
+if [ ! -f "${SRC}" ]; then
+  echo "[!] Source file missing: ${SRC}" >&2
+  exit 1
+fi
+
+echo "[*] Found source: ${SRC}"
+
+cp "${SRC}" "${TMPDIR}/secret.txt"
+
+echo "[*] copied secret to ${TMPDIR}/secret.txt"
+
+# create encrypted zip (password = pass123)
+zip -j -P pass123 "${TMPDIR}/payload.zip" "${TMPDIR}/secret.txt"
+
+echo "[*] created zip: ${TMPDIR}/payload.zip"
+
+# copy payload out to stable demo location
+mkdir -p /tmp/exfil
+cp "${TMPDIR}/payload.zip" /tmp/exfil/payload.zip
+
+echo "[*] copied payload to /tmp/exfil/payload.zip"
+
+ls -l /tmp/exfil || echo "[!] cannot list /tmp/exfil"
+
+echo "[*] script end: $(date)"
+
